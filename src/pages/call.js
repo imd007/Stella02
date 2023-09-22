@@ -316,14 +316,11 @@ export default function Call() {
 
   useEffect(() => {
     if(token.length > 0){
-    // Create a new WebSocket connection
-    const additionalHeaders  = {
-      authorization: "bearer "+ token 
-    };
-    const socket = new ReconnectingWebSocket(`ws://socket.mystella.ai?authorization=${token}`);
+    // Create a new WebSocket connection 
+    const socket = new ReconnectingWebSocket(`wss://socket.mystella.ai/ws?authorization=${token}`);
      
     // Event handler for when the connection is opened
-    socket.addEventListener('open', (event) => {debugger
+    socket.addEventListener('open', (event) => { 
       console.log('WebSocket connection opened:', event);
 
       // Send a message to the server
@@ -333,6 +330,7 @@ export default function Call() {
     // Event handler for when a message is received from the server
     socket.addEventListener('message', (event) => {
       console.log('Message from server:', event.data);
+      socket.send(typingValue);
     });
 
     // Event handler for when the connection is closed
@@ -341,9 +339,9 @@ export default function Call() {
     });
 
     // Clean up the WebSocket connection when the component is unmounted
-    // return () => {
-    //   socket.close();
-    // };
+    return () => {
+      socket.close();
+    };
   }
   }, [token]); // Empty dependency array ensures this effect runs only once
   
