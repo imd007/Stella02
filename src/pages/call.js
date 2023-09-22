@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import ReconnectingWebSocket from "reconnecting-websocket";
+import { useState, useEffect, useRef } from "react"; 
 import bgImg from "../../public/bg-2.png";
 import Image from "next/image";
 import { TextField } from "@mui/material";
@@ -12,7 +11,8 @@ import {
   SpeakerWaveIcon,
 } from "@heroicons/react/24/solid";
 //import "@/styles/call.css"
-import Webcam from "react-webcam";
+import Webcam from "react-webcam"; 
+import ReconnectingWebSocket from 'reconnecting-websocket';
 
 const Clipboard = () => (
   <svg
@@ -228,18 +228,51 @@ export default function Call() {
   useEffect(()=>{
     var requestOptions = {
       method: 'POST',
-      redirect: 'follow'
+      redirect: 'follow' 
     };
     
     fetch("https://socket.mystella.ai/stella/get-token", requestOptions)
-      .then(response => response.text())
+      .then(response => response.json())
       .then(result => SetToken(result?.token))
       .catch(error => console.log('error', error));
-  },[])
+  },[]);
+
+  useEffect(() => {
+    if(token.length > 0){
+    // Create a new WebSocket connection
+    const additionalHeaders  = {
+      authorization: "bearer "+ token 
+    };
+    const socket = new ReconnectingWebSocket(`ws://socket.mystella.ai?authorization=${token}`);
+     
+    // Event handler for when the connection is opened
+    socket.addEventListener('open', (event) => {debugger
+      console.log('WebSocket connection opened:', event);
+
+      // Send a message to the server
+      socket.send('Hello, server!');
+    });
+
+    // Event handler for when a message is received from the server
+    socket.addEventListener('message', (event) => {
+      console.log('Message from server:', event.data);
+    });
+
+    // Event handler for when the connection is closed
+    socket.addEventListener('close', (event) => {
+      console.log('WebSocket connection closed:', event);
+    });
+
+    // Clean up the WebSocket connection when the component is unmounted
+    // return () => {
+    //   socket.close();
+    // };
+  }
+  }, [token]); // Empty dependency array ensures this effect runs only once
+  
 
   return (
     <div className="w-[100vw] h-[100vh] ">
-      {token}
       <div className="absolute z-10 w-[100vw] h-[100vh] iFrame--container">
         {/* <Image src="/bg-2.png" layout="fill" objectFit="cover" quality={100} /> */}
         <iframe
@@ -278,7 +311,7 @@ export default function Call() {
           </div>
           <div className="flex flex-col absolute bottom-0 content--container z-20">
             <div className="p-2 max-h-[300px] overflow-y-scroll relative ">
-              <div className="flex flex-col gap-1 items-start justify-end w-full">
+              <div className="flex flex-col gap-1 items-start justify-end w-full">  
                 {chatHistory?.map((item, i) => {
                   return (
                     <div className="flex items-start rounded-3xl bg-black/30 p-3 text-white gap-2 text-left">
