@@ -199,7 +199,6 @@ export default function Call() {
 
   useEffect(() => {
     setTimeout(() => {
-      console.log("Delayed for 10 second.");
       setloading(true);
     }, "10000");
   }, []);
@@ -224,38 +223,23 @@ export default function Call() {
     // Clean up by stopping the video stream when the component unmounts
   }, [videoSrc]);
 
-  // useEffect(() => {
-  //   const iframe = document.getElementById("streamIframe");
+  const [token, SetToken] = useState("");
 
-
-  //   const onLoad = () => {
-  //     const iframeDocument = iframe.contentDocument;
-  //     const newStyleElement = iframeDocument.createElement("style");
-  //     newStyleElement.textContent = "#controls { display: none !important; }";
-  //     iframeDocument.head.appendChild(newStyleElement);
-  //   };
-  //   if (iframe !== null) {
-  //     iframe.addEventListener("load", onLoad);
-  //   }
-
-  //   return () => {
-  //     iframe.removeEventListener("load", onLoad);
-  //   };
-  // }, []);
-
-  //console.log("typingValue", typingValue);
-
-  // const handleVideoStream = (stream) => {
-  //   setVideoSrc({ source: window.URL.createObjectURL(stream) });
-  // };
-
-  // const videoError = () => {
-  //   console.log("ERROR");
-  // };
-  console.log("videoSrc", videoSrc);
+  useEffect(()=>{
+    var requestOptions = {
+      method: 'POST',
+      redirect: 'follow'
+    };
+    
+    fetch("https://socket.mystella.ai/stella/get-token", requestOptions)
+      .then(response => response.text())
+      .then(result => SetToken(result?.token))
+      .catch(error => console.log('error', error));
+  },[])
 
   return (
     <div className="w-[100vw] h-[100vh] ">
+      {token}
       <div className="absolute z-10 w-[100vw] h-[100vh] iFrame--container">
         {/* <Image src="/bg-2.png" layout="fill" objectFit="cover" quality={100} /> */}
         <iframe
