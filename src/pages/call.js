@@ -10,9 +10,13 @@ import {
   VideoCameraIcon,
   MicrophoneIcon,
   SpeakerWaveIcon,
+  PaperAirplaneIcon,
+  PlayCircleIcon,
+  MusicalNoteIcon,
 } from "@heroicons/react/24/solid";
 //import "@/styles/call.css"
 import Webcam from "react-webcam";
+import Modal from "@mui/material/Modal";
 
 const Clipboard = () => (
   <svg
@@ -96,21 +100,42 @@ export default function Call() {
   };
 
   //console.log("Type", TYPES[1])
+  const chatHistoryRef = useRef(null);
 
   const [loading, setloading] = useState(false);
 
   const [showInput, setShowInput] = useState(false);
   const [typingValue, setTypingValue] = useState("");
   const [videoSrc, setVideoSrc] = useState("");
+  const [open, setOpen] = useState(false);
+  const [videoURL, setVideoURL] = useState("");
+  const [audioURL, setAudioURL] = useState("");
+  const handleOpen = (type, video, audio) => {
+    if (type == "video") {
+      setVideoURL(video);
+    } else {
+      setAudioURL(audio);
+    }
+
+    setOpen(true);
+  };
+  const handleClose = () => setOpen(false);
 
   const [chatHistory, setChatHistory] = useState([
     {
       service_id: 0,
       message_id: "",
-      question_id: "",
+      question_id: 10,
       question: "Hey 🙂", // what will be shown in front end
       type: TYPES[2], // 0,1,2 0 - login 1- form 2- open ended questions
       data_type: "",
+      media_type: "video",
+      thumbnail_img:
+        "https://images.pexels.com/photos/18155683/pexels-photo-18155683/free-photo-of-waves-by-the-shore.jpeg?auto=compress&cs=tinysrgb&w=500",
+      video_url:
+        "https://firebasestorage.googleapis.com/v0/b/united-for-her.appspot.com/o/odoo%2FContent%2FNew%20Videos%2FVideos%2FHappiness%20Compassion%20Meditation.mp4?alt=media&token=9966a76d-1c77-4175-ae40-5dd55a5bba19",
+      audio_url:
+        "https://firebasestorage.googleapis.com/v0/b/united-for-her.appspot.com/o/odoo%2FContent%2FMeditation%2FAudio%2FMeditation%20to%20calm%20panic%20attack.mp3?alt=media&token=36f84d59-44a1-43dd-8afc-2098ff001a94",
       options: [
         {
           option_id: "",
@@ -129,7 +154,7 @@ export default function Call() {
     {
       service_id: 50, // service identifier
       message_id: "",
-      question_id: "", //question_id
+      question_id: 10, //question_id
       type: "",
       response: "Hey, What's up?", // option_display_name
       time_stamp: "",
@@ -141,7 +166,7 @@ export default function Call() {
     {
       service_id: 0,
       message_id: "",
-      question_id: "",
+      question_id: 11,
       question: "Please tell me what is bothering you the most.", // what will be shown in front end
       type: TYPES[1], // 0,1,2 0 - login 1- form 2- open ended questions
       data_type: "",
@@ -224,36 +249,58 @@ export default function Call() {
     // Clean up by stopping the video stream when the component unmounts
   }, [videoSrc]);
 
-  // useEffect(() => {
-  //   const iframe = document.getElementById("streamIframe");
+  // Scroll chat box to the bottom
+  useEffect(() => {
+    scrollChatToBottom();
+  }, [chatHistory]);
 
+  const scrollChatToBottom = () => {
+    if (chatHistoryRef.current) {
+      chatHistoryRef.current.scrollTop = chatHistoryRef.current.scrollHeight;
+    }
+  };
 
-  //   const onLoad = () => {
-  //     const iframeDocument = iframe.contentDocument;
-  //     const newStyleElement = iframeDocument.createElement("style");
-  //     newStyleElement.textContent = "#controls { display: none !important; }";
-  //     iframeDocument.head.appendChild(newStyleElement);
-  //   };
-  //   if (iframe !== null) {
-  //     iframe.addEventListener("load", onLoad);
-  //   }
+  const handleSend = () => {
+    setChatHistory((prevData) => [
+      ...prevData,
+      {
+        service_id: 50, // service identifier
+        message_id: "",
+        question_id: chatHistory[chatHistory.length - 1].question_id, //question_id
+        type: "",
+        response: typingValue, // option_display_name
+        time_stamp: "",
+        session_id: "",
+        user_id: "",
+        classify: "User: ",
+        responseFrom: "User",
+      },
+    ]);
 
-  //   return () => {
-  //     iframe.removeEventListener("load", onLoad);
-  //   };
-  // }, []);
+    setTypingValue("");
+    setShowInput(false);
+  };
 
-  //console.log("typingValue", typingValue);
+  const handleFormOptionClick = (option) => {
+    console.log("option", option);
+    setChatHistory((prevData) => [
+      ...prevData,
+      {
+        service_id: 50, // service identifier
+        message_id: "",
+        question_id: chatHistory[chatHistory.length - 1].question_id, //question_id
+        type: "",
+        response: option.option_display_name, // option_display_name
+        time_stamp: "",
+        session_id: "",
+        user_id: "",
+        classify: "User: ",
+        responseFrom: "User",
+      },
+    ]);
+  };
 
-  // const handleVideoStream = (stream) => {
-  //   setVideoSrc({ source: window.URL.createObjectURL(stream) });
-  // };
-
-  // const videoError = () => {
-  //   console.log("ERROR");
-  // };
-  console.log("videoSrc", videoSrc);
-
+  //console.log("CHAT", chatHistory)
   return (
     <div className="w-[100vw] h-[100vh] ">
       <div className="absolute z-10 w-[100vw] h-[100vh] iFrame--container">
@@ -269,22 +316,6 @@ export default function Call() {
       {loading && (
         <div className="">
           <div className="absolute top-[10%] right-4 p-2 z-20">
-            {/* <Image
-              className=""
-              width={100}
-              height={150}
-              objectFit="cover"
-              quality={100}
-              src="/images/userImage.png"
-            /> */}
-
-            {/* {videoSrc && (
-              <video
-                src={videoSrc}
-                autoPlay="true"
-                className="w-[100px] h-[150px]"
-              />
-            )} */}
             <Webcam
               audio={false}
               mirrored={true}
@@ -293,7 +324,10 @@ export default function Call() {
             />
           </div>
           <div className="flex flex-col absolute bottom-0 content--container z-20">
-            <div className="p-2 max-h-[300px] overflow-y-scroll relative ">
+            <div
+              ref={chatHistoryRef}
+              className="p-2 max-h-[300px] overflow-y-scroll relative "
+            >
               <div className="flex flex-col gap-1 items-start justify-end w-full">
                 {chatHistory?.map((item, i) => {
                   return (
@@ -304,16 +338,45 @@ export default function Call() {
                         <img src="images/userChat.png" alt="" />
                       )}
 
-                      <div className="space-y-3">
+                      <div
+                        className={`space-y-3 ${
+                          (item.media_type == "video" ||
+                            item.media_type == "audio") &&
+                          "bg-white/20 rounded-2xl p-2 border border-solid border-white/40"
+                        }`}
+                      >
+                        {(item.media_type == "video" ||
+                          item.media_type == "audio") && (
+                          <div
+                            className="relative"
+                            onClick={() =>
+                              handleOpen(
+                                item.media_type,
+                                item.video_url,
+                                item.audio_url
+                              )
+                            }
+                          >
+                            <img
+                              src={item?.thumbnail_img}
+                              className="max-w-[200px] rounded-xl mb-2"
+                            />
+                            <PlayCircleIcon className="text-white/80 bg-blue-500 w-8 h-8 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full" />
+                          </div>
+                        )}
                         <span className="text-left text-[14px]">
-                          {`${item?.classify}${item.question || item?.response
-                            }`}
+                          {`${item?.classify}${
+                            item.question || item?.response
+                          }`}
                         </span>
 
                         {item.type == "form" && item.options.length > 0 && (
                           <div className="flex flex-wrap gap-2 text-[14px]">
                             {item.options?.map((opt, i) => (
-                              <button className="bg-white/20 px-3 py-1 rounded-2xl border border-solid border-white/40 backdrop-blur-md text-white">
+                              <button
+                                className="bg-white/20 px-3 py-1 rounded-2xl border border-solid border-white/40 backdrop-blur-md text-white"
+                                onClick={() => handleFormOptionClick(opt)}
+                              >
                                 {opt.option_display_name}
                               </button>
                             ))}
@@ -327,8 +390,9 @@ export default function Call() {
             </div>
             <div className="w-[93%]  mx-auto p-2 mb-5">
               <div
-                className={`rounded-[44px] h-[64px] bg-[#FFFFFFCC] justify-evenly items-center w-full ${showInput ? "hidden" : "flex"
-                  }`}
+                className={`rounded-[44px] h-[64px] bg-[#FFFFFFCC] justify-evenly items-center w-full ${
+                  showInput ? "hidden" : "flex"
+                }`}
               >
                 <div className="w-[60px]">
                   <SpeakerWaveIcon className="h-6 w-6 text-[#9158CE] mx-auto" />
@@ -439,8 +503,9 @@ export default function Call() {
               </div>
 
               <div
-                className={`gap-3 items-center w-full ${!showInput ? "hidden" : "flex"
-                  }`}
+                className={`gap-3 items-center w-full ${
+                  !showInput ? "hidden" : "flex"
+                }`}
               >
                 <TextField
                   value={typingValue}
@@ -477,11 +542,9 @@ export default function Call() {
                           borderRadius: "25px",
                         }}
                         className="flex items-center justify-center text-white"
-                        onClick={() => {
-                          setStep(3);
-                        }}
+                        onClick={handleSend}
                       >
-                        <MicrophoneIcon className="w-5 h-5 text-white" />
+                        <PaperAirplaneIcon className="w-5 h-5 text-white" />
                       </div>
                     ),
                   }}
@@ -491,6 +554,32 @@ export default function Call() {
             </div>
           </div>
         </div>
+      )}
+
+      {open && (
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+          className="ModalVideo"
+        >
+          <div className=" absolute w-[90%] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-2xl">
+            {videoURL == "" ? (
+              <div className="flex flex-col gap-5 w-full items-center justify-center">
+                <MusicalNoteIcon className="mt-4 w-8 h-8 text-blue-600" />
+                <audio src={audioURL} controls={true} className="w-full" />
+              </div>
+            ) : (
+              <video
+                src={videoURL}
+                autoPlay="false"
+                controls="true"
+                className="w-full h-auto rounded-xl"
+              />
+            )}
+          </div>
+        </Modal>
       )}
     </div>
   );
