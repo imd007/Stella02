@@ -8,27 +8,27 @@ import backgroundImg from "../../public/bg.png";
 import backgroundImg2 from "../../public/bg-2.png";
 import Link from "next/link";
 import MailOutlinedIcon from "@mui/icons-material/MailOutlined";
-import AddIcon from '@mui/icons-material/Add';
-import CheckIcon from '@mui/icons-material/Check';
-import enUs from 'rmc-date-picker/lib/locale/en_US';
+import AddIcon from "@mui/icons-material/Add";
+import CheckIcon from "@mui/icons-material/Check";
+import enUs from "rmc-date-picker/lib/locale/en_US";
 import DatePicker from "rmc-date-picker";
 import "rmc-picker/assets/index.css";
 import "rmc-date-picker/assets/index.css";
-import OtpInput from 'react-otp-input';
-import 'react-phone-number-input/style.css'
-import PhoneInput from 'react-phone-number-input'
+import OtpInput from "react-otp-input";
+import "react-phone-number-input/style.css";
+import PhoneInput from "react-phone-number-input";
 // #region unreal render imports
-import {TextareaAutosize} from "@mui/base/TextareaAutosize";
+import { TextareaAutosize } from "@mui/base/TextareaAutosize";
 // import ReactQuill from 'react-quill';
-import dynamic from 'next/dynamic'
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import AudioPlayer from "@/components/AudioPlayer";
 import VideoPlayer from "@/components/VideoPlayer";
 import { MicListen } from "@/components/MicListen";
-const QuillNoSSRWrapper = dynamic(import('react-quill'), {	
-	ssr: false,
-	loading: () => <p>Loading ...</p>,
-	})
+const QuillNoSSRWrapper = dynamic(import("react-quill"), {
+  ssr: false,
+  loading: () => <p>Loading ...</p>,
+});
 const checkedIcon = (
   <svg
     width="36"
@@ -95,24 +95,23 @@ const checkedIcon = (
 );
 
 function Home() {
-  const [isBrowser,setIsBrowser] =useState(false);
-  useEffect(()=>{
-    if(typeof document !== 'undefined') {
+  const [isBrowser, setIsBrowser] = useState(false);
+  useEffect(() => {
+    if (typeof document !== "undefined") {
       console.log(document.location.href);
-      setIsBrowser(true)
-  }
-  },[])
-  const navigate = useRouter()
+      setIsBrowser(true);
+    }
+  }, []);
+  const navigate = useRouter();
   const [terms_accepted, set_terms_accepted] = useState(false);
 
   const [step, setStep] = useState(1);
-  const [otp,setOtp] = useState("");
+  const [otp, setOtp] = useState("");
   const [value, setValue] = useState();
   const [textAreavalue, setTextAreavalue] = useState("");
-  const [date,setDate] = useState(new Date())
+  const [date, setDate] = useState(new Date());
   const [enabelStep4, setEnableStep4] = useState(false);
   const [enabelStep5, setEnableStep5] = useState(false);
-
 
   const [languages, setLanguages] = useState([
     { label: "English", value: "ën", checked: false },
@@ -129,40 +128,38 @@ function Home() {
     { label: "Tamil", value: "hind", checked: false },
   ]);
 
-  
-const modules = {
-  toolbar: [
-    // [{ header: '1' }, { header: '2' }, { font: [] }],
-    // [{ size: [] }],
-    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-    [
-      { list: 'ordered' },
-      { list: 'bullet' },
-      { indent: '-1' },
-      { indent: '+1' },
+  const modules = {
+    toolbar: [
+      // [{ header: '1' }, { header: '2' }, { font: [] }],
+      // [{ size: [] }],
+      ["bold", "italic", "underline", "strike", "blockquote"],
+      [
+        { list: "ordered" },
+        { list: "bullet" },
+        { indent: "-1" },
+        { indent: "+1" },
+      ],
     ],
-  ],
-  clipboard: {
-    matchVisual: true,
-  },
-}
-const formats = [
-  'header',
-  'font',
-  'size',
-  'bold',
-  'italic',
-  'underline',
-  'strike',
-  'blockquote',
-  'list',
-  'bullet',
-  'indent',
-  'link',
-  'image',
-  'video',
-]
-
+    clipboard: {
+      matchVisual: true,
+    },
+  };
+  const formats = [
+    "header",
+    "font",
+    "size",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "blockquote",
+    "list",
+    "bullet",
+    "indent",
+    "link",
+    "image",
+    "video",
+  ];
 
   const onLangselect = (index) => {
     console.log(index);
@@ -202,18 +199,14 @@ const formats = [
     console.log(temp);
   };
 
-  const handeldateChange = (value) =>{
-    setDate(value)
-  }
+  const handeldateChange = (value) => {
+    setDate(value);
+  };
 
   return (
     <div className="w-full ">
       <div className="fixed z-0  w-[100vw] h-[100vh]">
-        <Image
-          src={backgroundImg}
-          alt="Img"
-          className="w-[100vw] h-[100vh]"
-        />
+        <Image src={backgroundImg} alt="Img" className="w-[100vw] h-[100vh]" />
         {/* <iframe
           src="http://35.183.155.167/"
           style={{ width: "100vw", height: "100vh", zIndex: -1 }}
@@ -239,8 +232,9 @@ const formats = [
               )}
             </div>
             <div className="  rounded-full">
-              {
-                ((step === 3 && enabelStep4) || (step === 4 && enabelStep5) || true ) ? (
+              {(step === 3 && enabelStep4) ||
+              (step === 4 && enabelStep5) ||
+              true ? (
                 <ChevronRightIcon
                   fontSize="large"
                   style={{
@@ -249,9 +243,8 @@ const formats = [
                     borderRadius: "50%",
                   }}
                   onClick={() => {
-                    if(step ==12)
-                    {
-                      navigate.push("/call")
+                    if (step == 12) {
+                      navigate.push("/call");
                     }
                     setStep((prev) => prev + 1);
                   }}
@@ -274,29 +267,23 @@ const formats = [
               )}
             </div>
           </div>
-          <div
-            className=
-                "w-full h-[150px] justify-self-center self-center grid items-center justify-center px-4"
-            
-          >
+          <div className="w-full h-[150px] justify-self-center self-center grid items-center justify-center px-4">
             <div
               className={
                 "p-4 rounded-xl grid gap-4 min-w-[90vw] max-w-[95vw] shadow-xl"
               }
               style={{
-                      background: "rgba(255,255,255,0.2)",
-                      backdropFilter: "blur(15px)",
-                      color:"#000",
-                      fontFamily: "Poppins",
-                      textAlign:"center",
-                      position:"relative",
-                      overflowX:"hidden"
-                    }
-                  
-              }
+                background: "rgba(255,255,255,0.2)",
+                backdropFilter: "blur(15px)",
+                color: "#000",
+                fontFamily: "Poppins",
+                textAlign: "center",
+                position: "relative",
+                overflowX: "hidden",
+              }}
             >
               {step === 1 ? (
-                <>
+                <div className="Step1">
                   <div className="text-[14px] flex items-center gap-1   ">
                     <div>
                       <Checkbox
@@ -337,10 +324,10 @@ const formats = [
                       Log In
                     </Button>
                   </div>
-                </>
+                </div>
               ) : step === 2 ? (
-                <>
-                  <div className=" flex items-center gap-2 flex justify-center ">
+                <div className="Step2">
+                  <div className=" flex items-center gap-2 justify-center ">
                     <div className="text-[22px] text-black w-ful ">Name</div>
                   </div>
                   <div>
@@ -358,7 +345,7 @@ const formats = [
                           padding: "0 0 0 10px",
                           border: "2px solid rgba(0,0,0,0.2)",
                           borderRight: "none",
-                          background:"rgba(255,255,255,0.3)"
+                          background: "rgba(255,255,255,0.3)",
                           // height:"70px
                         },
                         disableUnderline: true,
@@ -383,10 +370,10 @@ const formats = [
                       }}
                     />
                   </div>
-                </>
+                </div>
               ) : step === 3 ? (
-                <>
-                  <div className=" flex items-center gap-2 flex justify-center ">
+                <div className="Step3">
+                  <div className=" flex items-center gap-2 justify-center ">
                     <div className="text-[14px] text-black leading-1 ">
                       Lorem ipsum dolor sit amet, consectetur Vestibulum quis
                       nulla sit amet purus commodo
@@ -401,7 +388,7 @@ const formats = [
                         inputProps: {
                           style: {
                             textAlign: "left",
-                            height:"40px"
+                            height: "40px",
                           },
                         },
                         style: {
@@ -409,8 +396,7 @@ const formats = [
                           borderRadius: "35px",
                           border: "2px solid rgba(0,0,0,0.2)",
                           textAlign: "left",
-                          background:"rgba(255,255,255,0.3)"
-
+                          background: "rgba(255,255,255,0.3)",
                         },
                         disableUnderline: true,
                         startAdornment: (
@@ -431,28 +417,29 @@ const formats = [
                       }}
                     />
                   </div>
-                </>
+                </div>
               ) : step === 4 ? (
-                <>
+                <div className="Step4">
                   <div className=" flex items-center gap-2 justify-center w-[300px] ">
                     <div className="text-[14px] text-black leading-1 ">
                       Lorem ipsum dolor sit amet, consectetur Vestibulum quis
                       nulla sit amet purus commodo
                     </div>
                   </div>
-                  <div className="border border-gray-200 p-2 rounded-full bg-[rgba(255,255,255,0.4)] w-[90%]" >
-                  <PhoneInput
-                  defaultCountry="IN"
-                  placeholder="Enter phone number"
-                  value={value}
-                  style={{
-                    width:"85vw"
-                  }}
-                  onChange={setValue}/>
+                  <div className="border border-gray-200 p-2 rounded-full bg-[rgba(255,255,255,0.4)] w-[90%]">
+                    <PhoneInput
+                      defaultCountry="IN"
+                      placeholder="Enter phone number"
+                      value={value}
+                      style={{
+                        width: "85vw",
+                      }}
+                      onChange={setValue}
+                    />
                   </div>
-                </>
+                </div>
               ) : step === 9 ? (
-                <>
+                <div className="Step9">
                   <div className="">
                     <div className="text-[18px] text-black w-full">
                       Lorem ipsum dolor sit amet, consectetur Vestibulum quis
@@ -494,75 +481,76 @@ const formats = [
                         })}
                     </div>
                   </div>
-                </>
+                </div>
               ) : step === 6 ? (
-                <>
-                  <div className=" flex items-center gap-2 flex justify-center ">
+                <div className="Step6">
+                  <div className=" flex items-center gap-2 justify-center ">
                     <div className="text-[14px] text-black leading-1 ">
                       Lorem ipsum dolor sit amet, consectetur Vestibulum quis
                       nulla sit amet purus commodo
                     </div>
                   </div>
                   <div>
-                  <DatePicker
-                  rootNativeProps={{'data-xx': 'yy'}}
-                  date={date}
-                  onDateChange={handeldateChange}
-        mode="date"
-        minDate={new Date(1900, 1, 1, 0, 0, 0)}
-        locale={enUs}
-        formatMonth={(month, currentDate) => {
-          console.info(month,"--month")
-          switch (month+1) {
-            case 1: {
-              return "January";
-            }
-            case 2: {
-              return "February";
-            }
-            case 3: {
-              return "March";
-            }
-            case 4: {
-              return "April";
-            }
-            case 5: {
-              return "May";
-            }
-            case 6: {
-              return "June";
-            }
-            case 7: {
-              return "July";
-            }
-            case 8: {
-              return "August";
-            }
-            case 9: {
-              return "September";
-            }
-            case 10: {
-              return "October";
-            }
-            case 11: {
-              return "November";
-            }
-            case 12: {
-              return "December";
-            }
-            default: return "Month"
-          }
-        }}
-        formatDay={(dateNumber, currentDate) => {
-          const dateString = `${dateNumber}`;
-          return dateString;
-        }}
-      />
+                    <DatePicker
+                      rootNativeProps={{ "data-xx": "yy" }}
+                      date={date}
+                      onDateChange={handeldateChange}
+                      mode="date"
+                      minDate={new Date(1900, 1, 1, 0, 0, 0)}
+                      locale={enUs}
+                      formatMonth={(month, currentDate) => {
+                        console.info(month, "--month");
+                        switch (month + 1) {
+                          case 1: {
+                            return "January";
+                          }
+                          case 2: {
+                            return "February";
+                          }
+                          case 3: {
+                            return "March";
+                          }
+                          case 4: {
+                            return "April";
+                          }
+                          case 5: {
+                            return "May";
+                          }
+                          case 6: {
+                            return "June";
+                          }
+                          case 7: {
+                            return "July";
+                          }
+                          case 8: {
+                            return "August";
+                          }
+                          case 9: {
+                            return "September";
+                          }
+                          case 10: {
+                            return "October";
+                          }
+                          case 11: {
+                            return "November";
+                          }
+                          case 12: {
+                            return "December";
+                          }
+                          default:
+                            return "Month";
+                        }
+                      }}
+                      formatDay={(dateNumber, currentDate) => {
+                        const dateString = `${dateNumber}`;
+                        return dateString;
+                      }}
+                    />
                   </div>
-                </>
+                </div>
               ) : step === 7 ? (
-                <>
-                  <div className=" flex items-center gap-2 flex justify-center ">
+                <div className="Step7">
+                  <div className=" flex items-center gap-2 justify-center ">
                     <div className="text-[14px] text-black leading-1 ">
                       Lorem ipsum dolor sit amet, consectetur Vestibulum quis
                       nulla sit amet purus commodo
@@ -584,14 +572,18 @@ const formats = [
                           borderRadius: "35px",
                           border: "2px solid rgba(0,0,0,0.2)",
                           textAlign: "left",
-                          background:"rgba(255,255,255,0.3)"
-
+                          background: "rgba(255,255,255,0.3)",
                         },
                         disableUnderline: true,
                         startAdornment: (
                           <div
                             id="login_verify_otp"
-                            style={{padding: "0 8px",height:"40px",borderRadius:"25px 0 0 25px",background:"rgba(0,0,0,0.03)" }}
+                            style={{
+                              padding: "0 8px",
+                              height: "40px",
+                              borderRadius: "25px 0 0 25px",
+                              background: "rgba(0,0,0,0.03)",
+                            }}
                             className="flex items-center justify-center text-[18px] text-black text-gray-700 border-r border-gray-600 mr-1"
                           >
                             http://
@@ -600,9 +592,9 @@ const formats = [
                       }}
                     />
                   </div>
-                </>
+                </div>
               ) : step === 8 ? (
-                <>
+                <div className="Step8">
                   <div className=" flex items-center gap-2 flex justify-center ">
                     <div className="text-[14px] text-black leading-1 ">
                       Lorem ipsum dolor sit amet, consectetur Vestibulum quis
@@ -610,55 +602,54 @@ const formats = [
                     </div>
                   </div>
                   <div>
-                  <OtpInput
-      value={otp}
-      onChange={setOtp}
-      numInputs={6}
-      renderSeparator={<span style={{color:"rgba(255,255,255,0.05)"}} >{" - "}</span>}
-      renderInput={(props) => <input {...props} />}
-      containerStyle={{
-        display:"flex",
-        justifyContent:"center"
-      }}
-      inputStyle={
-        {
-          // background:"blue",
-          height:"40px",
-          width:"40px",
-          borderRadius:"5px"
-        }
-      }
-      isInputNum={true}
-    />
+                    <OtpInput
+                      value={otp}
+                      onChange={setOtp}
+                      numInputs={6}
+                      renderSeparator={
+                        <span style={{ color: "rgba(255,255,255,0.05)" }}>
+                          {" - "}
+                        </span>
+                      }
+                      renderInput={(props) => <input {...props} />}
+                      containerStyle={{
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                      inputStyle={{
+                        // background:"blue",
+                        height: "40px",
+                        width: "40px",
+                        borderRadius: "5px",
+                      }}
+                      isInputNum={true}
+                    />
                   </div>
-                </>
+                </div>
               ) : step === 5 ? (
-                <>
-                  <div className=" flex items-center gap-2 flex justify-center max-w-[300px] break-word">
+                <div className="Step5">
+                  <div className="flex items-center gap-2 justify-center max-w-[300px] break-word">
                     <div className="text-[14px] text-black leading-1 ">
                       Lorem ipsum dolor sit amet, consectetur Vestibulum quis
                       nulla sit amet purus commodo
                     </div>
                   </div>
-                  <div className="w-full" >
-                  {/* <TextareaAutosize
-        className="bg-[rgba(255,255,255,0.2)] w-[90%] text-sm leading-5 p-3 rounded-lg rounded-br-none shadow-md shadow-slate-100 text-left border border-solid border-slate-600"
-        aria-label="Demo input"
-        placeholder="Empty"
-        minRows={3}
-      /> */}
-      { isBrowser ?
-      <QuillNoSSRWrapper 
-      modules={modules}
-      QuillNoSSRWrapper="snow" 
-      formats={formats}
-      value={textAreavalue} 
-      onChange={setTextAreavalue} /> : <></>
-}
+                  <div className="w-full">
+                    {isBrowser ? (
+                      <QuillNoSSRWrapper
+                        modules={modules}
+                        QuillNoSSRWrapper="snow"
+                        formats={formats}
+                        value={textAreavalue}
+                        onChange={setTextAreavalue}
+                      />
+                    ) : (
+                      <></>
+                    )}
                   </div>
-                </>
+                </div>
               ) : step === 10 ? (
-                <>
+                <div className="Step10">
                   <div className=" flex items-center gap-2  ">
                     <div className="text-[18px] text-black w-full ">
                       Lorem ipsum dolor sit amet, consectetur Vestibulum quis
@@ -673,7 +664,7 @@ const formats = [
                             key={index}
                             style={{
                               fontFamily: "Poppins",
-                              width:"max-content",
+                              width: "max-content",
                               fontWeight: o?.checked ? "500" : "400",
                               color: o?.checked ? "White" : "#2D2D2D",
                               background: o?.checked
@@ -681,7 +672,9 @@ const formats = [
                                 : "",
                               filter:
                                 "drop-shadow(0px 8px 16px rgba(241, 124, 208, 0.10))",
-                                border:o?.checked ? "none" : "1px solid #00000020",
+                              border: o?.checked
+                                ? "none"
+                                : "1px solid #00000020",
                               textTransform: "none !important",
                             }}
                             className="p-2 shadow flex items-center gap-1 rounded-full text-sm"
@@ -696,9 +689,9 @@ const formats = [
                       })}
                     </div>
                   </div>
-                </>
+                </div>
               ) : step === 11 ? (
-                <>
+                <div className="Step11">
                   <div className=" flex items-center gap-2  ">
                     <div className="text-[18px] text-black w-full ">
                       Lorem ipsum dolor sit amet, consectetur Vestibulum quis
@@ -730,18 +723,23 @@ const formats = [
                             }}
                           >
                             {o?.label}
-                            
                           </div>
                         );
                       })}
                     </div>
                   </div>
-                </>
-              ) : step ===12 ? (<>
-                <AudioPlayer url={"https://www.mfiles.co.uk/mp3-downloads/brahms-st-anthony-chorale-theme-two-pianos.mp3"}  />
-                <VideoPlayer />
-                <MicListen />
-              </>): (
+                </div>
+              ) : step === 12 ? (
+                <div className="Step12">
+                  <AudioPlayer
+                    url={
+                      "https://www.mfiles.co.uk/mp3-downloads/brahms-st-anthony-chorale-theme-two-pianos.mp3"
+                    }
+                  />
+                  <VideoPlayer />
+                  <MicListen />
+                </div>
+              ) : (
                 <></>
               )}
             </div>
