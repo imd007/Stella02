@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import ReconnectingWebSocket from "reconnecting-websocket";
+import { useState, useEffect, useRef } from "react"; 
 import bgImg from "../../public/bg-2.png";
 import Image from "next/image";
 import { TextField } from "@mui/material";
@@ -15,8 +14,9 @@ import {
   MusicalNoteIcon,
 } from "@heroicons/react/24/solid";
 //import "@/styles/call.css"
-import Webcam from "react-webcam";
+import Webcam from "react-webcam"; 
 import Modal from "@mui/material/Modal";
+import ReconnectingWebSocket from 'reconnecting-websocket';
 
 const Clipboard = () => (
   <svg
@@ -224,7 +224,6 @@ export default function Call() {
 
   useEffect(() => {
     setTimeout(() => {
-      console.log("Delayed for 10 second.");
       setloading(true);
     }, "10000");
   }, []);
@@ -301,6 +300,52 @@ export default function Call() {
   };
 
   //console.log("CHAT", chatHistory)
+  const [token, SetToken] = useState("");
+
+  useEffect(()=>{
+    var requestOptions = {
+      method: 'POST',
+      redirect: 'follow' 
+    };
+    
+    fetch("https://socket.mystella.ai/stella/get-token", requestOptions)
+      .then(response => response.json())
+      .then(result => SetToken(result?.token))
+      .catch(error => console.log('error', error));
+  },[]);
+
+  useEffect(() => {
+    if(token.length > 0){
+    // Create a new WebSocket connection 
+    const socket = new ReconnectingWebSocket(`wss://socket.mystella.ai/ws?authorization=${token}`);
+     
+    // Event handler for when the connection is opened
+    socket.addEventListener('open', (event) => { 
+      console.log('WebSocket connection opened:', event);
+
+      // Send a message to the server
+      socket.send('Hello, server!');
+    });
+
+    // Event handler for when a message is received from the server
+    socket.addEventListener('message', (event) => {
+      console.log('Message from server:', event.data);
+      socket.send(typingValue);
+    });
+
+    // Event handler for when the connection is closed
+    socket.addEventListener('close', (event) => {
+      console.log('WebSocket connection closed:', event);
+    });
+
+    // Clean up the WebSocket connection when the component is unmounted
+    return () => {
+      socket.close();
+    };
+  }
+  }, [token]); // Empty dependency array ensures this effect runs only once
+  
+
   return (
     <div className="w-[100vw] h-[100vh] ">
       <div className="absolute z-10 w-[100vw] h-[100vh] iFrame--container">
