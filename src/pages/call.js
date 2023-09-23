@@ -7,16 +7,26 @@ import { TextField } from "@mui/material";
 import {
   ChatBubbleLeftEllipsisIcon,
   VideoCameraIcon,
+  VideoCameraSlashIcon,
   MicrophoneIcon,
+  StopIcon,
   SpeakerWaveIcon,
   PaperAirplaneIcon,
   PlayCircleIcon,
   MusicalNoteIcon,
+  ArrowLeftIcon,
 } from "@heroicons/react/24/solid";
 //import "@/styles/call.css"
 import Webcam from "react-webcam";
 import Modal from "@mui/material/Modal";
 import ReconnectingWebSocket from "reconnecting-websocket";
+import { json } from "react-router-dom";
+import { AudioRecorder, useAudioRecorder } from "react-audio-voice-recorder";
+//import { createSpeechlySpeechRecognition } from '@speechly/speech-recognition-polyfill';
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
+import VideoRecorder from "@/components/VideoRecorder";
 
 const Clipboard = () => (
   <svg
@@ -103,147 +113,50 @@ export default function Call() {
   const chatHistoryRef = useRef(null);
 
   const [loading, setloading] = useState(false);
-
   const [showInput, setShowInput] = useState(false);
   const [typingValue, setTypingValue] = useState("");
-  const [videoSrc, setVideoSrc] = useState("");
   const [open, setOpen] = useState(false);
   const [videoURL, setVideoURL] = useState("");
   const [audioURL, setAudioURL] = useState("");
-
+  const [startCamera, setStartCamera] = useState(false);
+  const [startRecording, setStartRecording] = useState(false);
+  const [audioRequestData, setAudioRequestData] = useState(null);
   const [token, SetToken] = useState("");
-  const [chatHistory, setChatHistory] = useState([
-    {
-      service_id: 0,
-      message_id: "",
-      question_id: 10,
-      question: "Hey 🙂", // what will be shown in front end
-      type: 2, // 0,1,2 0 - login 1- form 2- open ended questions
-      data_type: "",
-      media_type: "video",
-      thumbnail_img:
-        "https://images.pexels.com/photos/18155683/pexels-photo-18155683/free-photo-of-waves-by-the-shore.jpeg?auto=compress&cs=tinysrgb&w=500",
-      video_url:
-        "https://firebasestorage.googleapis.com/v0/b/united-for-her.appspot.com/o/odoo%2FContent%2FNew%20Videos%2FVideos%2FHappiness%20Compassion%20Meditation.mp4?alt=media&token=9966a76d-1c77-4175-ae40-5dd55a5bba19",
-      audio_url:
-        "https://firebasestorage.googleapis.com/v0/b/united-for-her.appspot.com/o/odoo%2FContent%2FMeditation%2FAudio%2FMeditation%20to%20calm%20panic%20attack.mp3?alt=media&token=36f84d59-44a1-43dd-8afc-2098ff001a94",
-      options: [
-        {
-          option_id: "",
-          option_technical_name: "",
-          option_display_name: "",
-          sequence: "",
-          is_mandatory: "",
-        },
-      ],
-      time_stamp: "",
-      session_id: "",
-      classify: "Therapist: ",
-      user_id: "",
-      responseFrom: "Stella",
-    },
-    {
-      service_id: 50, // service identifier
-      message_id: "",
-      question_id: 10, //question_id
-      type: 2,
-      response: "Hey, What's up?", // option_display_name
-      time_stamp: "",
-      session_id: "",
-      user_id: "",
-      classify: "User: ",
-      responseFrom: "User",
-    },
-    {
-      service_id: 0,
-      message_id: "",
-      question_id: 11,
-      question: "Please tell me what is bothering you the most.", // what will be shown in front end
-      type: 1, // 0,1,2 0 - login 1- form 2- open ended questions
-      data_type: "",
-      options: [
-        {
-          option_id: "",
-          option_technical_name: "",
-          option_display_name: "Show tests",
-          sequence: 0,
-          is_mandatory: "",
-        },
-        {
-          option_id: "",
-          option_technical_name: "",
-          option_display_name: "I’ll do a worksheet",
-          sequence: 0,
-          is_mandatory: "",
-        },
-        {
-          option_id: "",
-          option_technical_name: "",
-          option_display_name: "Say personality type",
-          sequence: 0,
-          is_mandatory: "",
-        },
-        {
-          option_id: "",
-          option_technical_name: "",
-          option_display_name: "Start an activity",
-          sequence: 0,
-          is_mandatory: "",
-        },
-        {
-          option_id: "",
-          option_technical_name: "",
-          option_display_name: "Play videos",
-          sequence: 0,
-          is_mandatory: "",
-        },
-        {
-          option_id: "",
-          option_technical_name: "",
-          option_display_name: "See more",
-          sequence: 0,
-          is_mandatory: "",
-        },
-      ],
-      time_stamp: "",
-      session_id: "",
-      classify: "Therapist: ",
-      user_id: "",
-      responseFrom: "Stella",
-    },
-  ]);
+  const [chatHistory, setChatHistory] = useState([]);
 
+  const recorderControls = useAudioRecorder();
+
+  const convertBlobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve(reader.result);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
+
+  //Set timeout for 10 secs
   useEffect(() => {
     setTimeout(() => {
       setloading(true);
     }, "10000");
   }, []);
 
-  useEffect(() => {
-    const startVideo = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-        });
-        // Check if the component is still mounted before setting the source
-        if (stream && setVideoSrc) {
-          setVideoSrc(window.URL.createObjectURL(stream));
-        }
-      } catch (error) {
-        console.error("Error accessing video stream:", error);
-      }
-    };
-
-    startVideo();
-
-    // Clean up by stopping the video stream when the component unmounts
-  }, [videoSrc]);
-
   // Scroll chat box to the bottom
   useEffect(() => {
     scrollChatToBottom();
   }, [chatHistory]);
 
+  //Get Token
   useEffect(() => {
     const requestOptions = {
       method: "POST",
@@ -258,6 +171,7 @@ export default function Call() {
 
   const socketRef = useRef(null);
 
+  //Socket connection
   useEffect(() => {
     if (token !== "") {
       if (!socketRef.current) {
@@ -272,13 +186,27 @@ export default function Call() {
 
           // Send a message to the server
           console.log("SENDING..");
-          socketRef.current.send("Hello, server!");
+          socketRef.current.send(
+            JSON.stringify({
+              service_id: 50, // service identifier
+              message_id: "",
+              question_id: "", //question_id
+              type: "",
+              response: "Hello!", // option_display_name
+              time_stamp: "",
+              session_id: "",
+              user_id: "",
+              classify: "User: ",
+              responseFrom: "User",
+            })
+          );
         });
 
         // Event handler for when a message is received from the server
         socketRef.current.addEventListener("message", (event) => {
           console.log("Message from server:", event.data);
           //socket.send(typingValue);
+          setChatHistory((prevData) => [...prevData, JSON.parse(event.data)]);
         });
 
         // Event handler for when the connection is closed
@@ -297,6 +225,57 @@ export default function Call() {
     }
   }, [token]); // Empty dependency array ensures this effect runs only once
 
+  //Audio Recording
+  useEffect(() => {
+    //console.log("CALLED", audioRequestData)
+    const sendAudioData = async () => {
+      const url = URL.createObjectURL(audioRequestData);
+
+      console.log("Sending audio to server codde...");
+      setChatHistory([
+        ...chatHistory,
+        {
+          service_id: 0,
+          message_id: "",
+          question_id: 10,
+          question: "Hey 🙂", // what will be shown in front end
+          type: 2, // 0,1,2 0 - login 1- form 2- open ended questions
+          data_type: "",
+          audio_url: url,
+          options: [
+            {
+              option_id: "",
+              option_technical_name: "",
+              option_display_name: "",
+              sequence: "",
+              is_mandatory: "",
+            },
+          ],
+          time_stamp: "",
+          session_id: "",
+          classify: "User: ",
+          user_id: "",
+          responseFrom: "User",
+        },
+      ]);
+
+      const base64String = await convertBlobToBase64(audioRequestData);
+
+      //sendMessageToApi("audio", base64String);
+    };
+
+    if (!startRecording && audioRequestData) {
+      sendAudioData();
+      setAudioRequestData(null);
+      setStartRecording(false); // Reset the flag
+    }
+
+    return () => {
+      setAudioRequestData(null);
+      // Perform any cleanup tasks here if needed
+      // This function will be executed when the component is unmounted
+    };
+  }, [audioRequestData, startRecording]);
   const scrollChatToBottom = () => {
     if (chatHistoryRef.current) {
       chatHistoryRef.current.scrollTop = chatHistoryRef.current.scrollHeight;
@@ -310,7 +289,7 @@ export default function Call() {
       // Ensure that the socket exists before sending
       socketRef.current.send(
         JSON.stringify({
-          service_id: 50, // service identifier
+          service_id: chatHistory[chatHistory.length - 1].service_id, // service identifier
           message_id: "",
           question_id: chatHistory[chatHistory.length - 1].question_id, //question_id
           type: chatHistory[chatHistory.length - 1].type,
@@ -327,7 +306,7 @@ export default function Call() {
     setChatHistory((prevData) => [
       ...prevData,
       {
-        service_id: 50, // service identifier
+        service_id: chatHistory[chatHistory.length - 1].service_id, // service identifier
         message_id: "",
         question_id: chatHistory[chatHistory.length - 1].question_id, //question_id
         type: chatHistory[chatHistory.length - 1].type,
@@ -375,6 +354,24 @@ export default function Call() {
   const handleClose = () => setOpen(false);
   //console.log("CHAT", chatHistory)
 
+  const handleRecordingStart = () => {
+    setStartRecording(true);
+
+    SpeechRecognition.startListening({ continuous: true });
+    console.log("listening");
+    // recorderControls.startRecording();
+  };
+
+  const handleRecordingStop = async () => {
+    setStartRecording(false);
+    SpeechRecognition.stopListening;
+    // recorderControls.stopRecording();
+    console.log("Stopped");
+  };
+
+  console.log("listening", listening);
+  console.log("TRANSCRIPT", transcript);
+
   return (
     <div className="w-[100vw] h-[100vh] ">
       <div className="absolute z-10 w-[100vw] h-[100vh] iFrame--container">
@@ -390,14 +387,11 @@ export default function Call() {
       {loading && (
         <div className="">
           <div className="absolute top-[10%] right-4 p-2 z-20">
-            <Webcam
-              audio={false}
-              mirrored={true}
-              height={12}
-              className="webcam z-[90]"
-            />
+            {startCamera && (
+              <VideoRecorder startCam={startCamera} />
+            )}
           </div>
-          <div className="flex flex-col absolute bottom-0 content--container z-20">
+          <div className="flex flex-col absolute bottom-0 content--container z-20 w-full">
             <div
               ref={chatHistoryRef}
               className="p-2 max-h-[300px] overflow-y-scroll relative "
@@ -414,29 +408,38 @@ export default function Call() {
 
                       <div
                         className={`space-y-3 ${
-                          (item.media_type == "video" ||
-                            item.media_type == "audio") &&
-                          "bg-white/20 rounded-2xl p-2 border border-solid border-white/40"
+                          item.media_type == "video" ||
+                          item.media_type == "audio"
+                            ? "bg-white/20 rounded-2xl p-2 border border-solid border-white/40"
+                            : ""
                         }`}
                       >
                         {(item.media_type == "video" ||
-                          item.media_type == "audio") && (
-                          <div
-                            className="relative"
-                            onClick={() =>
-                              handleOpen(
-                                item.media_type,
-                                item.video_url,
-                                item.audio_url
-                              )
-                            }
-                          >
-                            <img
-                              src={item?.thumbnail_img}
-                              className="max-w-[200px] rounded-xl mb-2"
-                            />
-                            <PlayCircleIcon className="text-white/80 bg-blue-500 w-8 h-8 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full" />
-                          </div>
+                          item.media_type == "audio") &&
+                          item.thumbnail_img !== undefined && (
+                            <div
+                              className="relative"
+                              onClick={() =>
+                                handleOpen(
+                                  item.media_type,
+                                  item.video_url,
+                                  item.audio_url
+                                )
+                              }
+                            >
+                              <img
+                                src={item?.thumbnail_img}
+                                className="max-w-[200px] rounded-xl mb-2"
+                              />
+                              <PlayCircleIcon className="text-white/80 bg-blue-500 w-8 h-8 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full" />
+                            </div>
+                          )}
+                        {item.audio_url && item.thumbnail_img == undefined && (
+                          <audio
+                            src={item.audio_url}
+                            controls={true}
+                            className="w-full min-w-[250px]"
+                          />
                         )}
                         <span className="text-left text-[14px]">
                           {`${item?.classify}${
@@ -469,104 +472,133 @@ export default function Call() {
                   showInput ? "hidden" : "flex"
                 }`}
               >
-                <div className="w-[60px]">
-                  <SpeakerWaveIcon className="h-6 w-6 text-[#9158CE] mx-auto" />
-                </div>
-                <div className="w-[60px]">
-                  <MicrophoneIcon className="h-6 w-6 text-[#9158CE] mx-auto" />
-                </div>
-                <svg
-                  width="82"
-                  height="82"
-                  viewBox="0 0 82 67"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+                <div
+                  className="w-[60px] cursor-pointer"
+                  onClick={() => setStartCamera(!startCamera)}
                 >
-                  <g filter="url(#filter0_d_612_4495)">
-                    <circle
-                      cx="41"
-                      cy="33"
-                      r="25"
-                      fill="url(#paint0_linear_612_4495)"
-                    />
-                  </g>
-                  <rect
-                    x="33"
-                    y="28.1997"
-                    width="3.2"
-                    height="9.6"
-                    rx="1.6"
-                    fill="white"
-                    fill-opacity="0.3"
-                  />
-                  <rect
-                    x="39.3994"
-                    y="21"
-                    width="3.2"
-                    height="24"
-                    rx="1.6"
-                    fill="white"
-                  />
-                  <rect
-                    x="45.7988"
-                    y="25"
-                    width="3.2"
-                    height="16"
-                    rx="1.6"
-                    fill="white"
-                  />
-                  <defs>
-                    <filter
-                      id="filter0_d_612_4495"
-                      x="0"
-                      y="0"
-                      width="82"
-                      height="82"
-                      filterUnits="userSpaceOnUse"
-                      color-interpolation-filters="sRGB"
-                    >
-                      <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                      <feColorMatrix
-                        in="SourceAlpha"
-                        type="matrix"
-                        values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                        result="hardAlpha"
-                      />
-                      <feOffset dy="8" />
-                      <feGaussianBlur stdDeviation="8" />
-                      <feComposite in2="hardAlpha" operator="out" />
-                      <feColorMatrix
-                        type="matrix"
-                        values="0 0 0 0 0.945098 0 0 0 0 0.486275 0 0 0 0 0.815686 0 0 0 0.1 0"
-                      />
-                      <feBlend
-                        mode="normal"
-                        in2="BackgroundImageFix"
-                        result="effect1_dropShadow_612_4495"
-                      />
-                      <feBlend
-                        mode="normal"
-                        in="SourceGraphic"
-                        in2="effect1_dropShadow_612_4495"
-                        result="shape"
-                      />
-                    </filter>
-                    <linearGradient
-                      id="paint0_linear_612_4495"
-                      x1="52.1111"
-                      y1="-29.5"
-                      x2="26.6844"
-                      y2="54.0668"
-                      gradientUnits="userSpaceOnUse"
-                    >
-                      <stop stop-color="#F17CD0" />
-                      <stop offset="1" stop-color="#6749CD" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <div className="w-[60px]">
-                  <VideoCameraIcon className="h-6 w-6 text-[#9158CE] mx-auto" />
+                  {startCamera ? (
+                    <VideoCameraSlashIcon className="h-6 w-6 text-[#9158CE] mx-auto" />
+                  ) : (
+                    <VideoCameraIcon className="h-6 w-6 text-[#9158CE] mx-auto" />
+                  )}
                 </div>
+                {/* <div className="w-[60px]">
+                  <SpeakerWaveIcon className="h-6 w-6 text-[#9158CE] mx-auto" />
+                </div> */}
+                {/* {!startRecording ? (
+                  <div className="w-[60px]" onClick={handleRecordingStart}>
+                    <MicrophoneIcon className="h-6 w-6 text-[#9158CE] mx-auto" />
+                  </div>
+                ) : (
+                  <div className="w-[60px]" onClick={handleRecordingStop}>
+                    <StopIcon className="h-6 w-6 text-[#9158CE] mx-auto" />
+                  </div>
+                )} */}
+                {/* <div style={{ visibility: "hidden", position: "absolute" }}>
+                  <AudioRecorder
+                    onRecordingComplete={(blob) => setAudioRequestData(blob)}
+                    recorderControls={recorderControls}
+                  />
+                </div> */}
+                <div
+                  onMouseDown={handleRecordingStart}
+                  onMouseUp={handleRecordingStop}
+                  onMouseLeave={handleRecordingStop}
+                >
+                  <svg
+                    width="82"
+                    height="82"
+                    viewBox="0 0 82 67"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g filter="url(#filter0_d_612_4495)">
+                      <circle
+                        cx="41"
+                        cy="33"
+                        r="25"
+                        fill="url(#paint0_linear_612_4495)"
+                      />
+                    </g>
+                    <rect
+                      x="33"
+                      y="28.1997"
+                      width="3.2"
+                      height="9.6"
+                      rx="1.6"
+                      fill="white"
+                      fill-opacity="0.3"
+                    />
+                    <rect
+                      x="39.3994"
+                      y="21"
+                      width="3.2"
+                      height="24"
+                      rx="1.6"
+                      fill="white"
+                    />
+                    <rect
+                      x="45.7988"
+                      y="25"
+                      width="3.2"
+                      height="16"
+                      rx="1.6"
+                      fill="white"
+                    />
+                    <defs>
+                      <filter
+                        id="filter0_d_612_4495"
+                        x="0"
+                        y="0"
+                        width="82"
+                        height="82"
+                        filterUnits="userSpaceOnUse"
+                        color-interpolation-filters="sRGB"
+                      >
+                        <feFlood
+                          flood-opacity="0"
+                          result="BackgroundImageFix"
+                        />
+                        <feColorMatrix
+                          in="SourceAlpha"
+                          type="matrix"
+                          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                          result="hardAlpha"
+                        />
+                        <feOffset dy="8" />
+                        <feGaussianBlur stdDeviation="8" />
+                        <feComposite in2="hardAlpha" operator="out" />
+                        <feColorMatrix
+                          type="matrix"
+                          values="0 0 0 0 0.945098 0 0 0 0 0.486275 0 0 0 0 0.815686 0 0 0 0.1 0"
+                        />
+                        <feBlend
+                          mode="normal"
+                          in2="BackgroundImageFix"
+                          result="effect1_dropShadow_612_4495"
+                        />
+                        <feBlend
+                          mode="normal"
+                          in="SourceGraphic"
+                          in2="effect1_dropShadow_612_4495"
+                          result="shape"
+                        />
+                      </filter>
+                      <linearGradient
+                        id="paint0_linear_612_4495"
+                        x1="52.1111"
+                        y1="-29.5"
+                        x2="26.6844"
+                        y2="54.0668"
+                        gradientUnits="userSpaceOnUse"
+                      >
+                        <stop stop-color="#F17CD0" />
+                        <stop offset="1" stop-color="#6749CD" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+
                 <div
                   className="w-[60px]"
                   onClick={() => {
@@ -607,6 +639,14 @@ export default function Call() {
                       textAlign: "left",
                     },
                     disableUnderline: true,
+                    startAdornment: (
+                      <div
+                        className="h-[90%] w-auto aspect-square  rounded-full relative cursor-pointer"
+                        onClick={() => setShowInput(false)}
+                      >
+                        <ArrowLeftIcon className="w-5 h-5 text-white absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2" />
+                      </div>
+                    ),
                     endAdornment: (
                       <div
                         id="login_verify_otp"
