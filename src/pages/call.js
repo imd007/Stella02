@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react"; 
+import { useState, useEffect, useRef } from "react";
 import bgImg from "../../public/bg-2.png";
 import Image from "next/image";
 import { TextField } from "@mui/material";
@@ -14,9 +14,9 @@ import {
   MusicalNoteIcon,
 } from "@heroicons/react/24/solid";
 //import "@/styles/call.css"
-import Webcam from "react-webcam"; 
+import Webcam from "react-webcam";
 import Modal from "@mui/material/Modal";
-import ReconnectingWebSocket from 'reconnecting-websocket';
+import ReconnectingWebSocket from "reconnecting-websocket";
 
 const Clipboard = () => (
   <svg
@@ -110,24 +110,15 @@ export default function Call() {
   const [open, setOpen] = useState(false);
   const [videoURL, setVideoURL] = useState("");
   const [audioURL, setAudioURL] = useState("");
-  const handleOpen = (type, video, audio) => {
-    if (type == "video") {
-      setVideoURL(video);
-    } else {
-      setAudioURL(audio);
-    }
 
-    setOpen(true);
-  };
-  const handleClose = () => setOpen(false);
-
+  const [token, SetToken] = useState("");
   const [chatHistory, setChatHistory] = useState([
     {
       service_id: 0,
       message_id: "",
       question_id: 10,
       question: "Hey 🙂", // what will be shown in front end
-      type: TYPES[2], // 0,1,2 0 - login 1- form 2- open ended questions
+      type: 2, // 0,1,2 0 - login 1- form 2- open ended questions
       data_type: "",
       media_type: "video",
       thumbnail_img:
@@ -155,7 +146,7 @@ export default function Call() {
       service_id: 50, // service identifier
       message_id: "",
       question_id: 10, //question_id
-      type: "",
+      type: 2,
       response: "Hey, What's up?", // option_display_name
       time_stamp: "",
       session_id: "",
@@ -168,7 +159,7 @@ export default function Call() {
       message_id: "",
       question_id: 11,
       question: "Please tell me what is bothering you the most.", // what will be shown in front end
-      type: TYPES[1], // 0,1,2 0 - login 1- form 2- open ended questions
+      type: 1, // 0,1,2 0 - login 1- form 2- open ended questions
       data_type: "",
       options: [
         {
@@ -253,6 +244,59 @@ export default function Call() {
     scrollChatToBottom();
   }, [chatHistory]);
 
+  useEffect(() => {
+    const requestOptions = {
+      method: "POST",
+      redirect: "follow",
+    };
+
+    fetch("https://socket.mystella.ai/stella/get-token", requestOptions)
+      .then((response) => response.json())
+      .then((result) => SetToken(result?.token))
+      .catch((error) => console.log("error", error));
+  }, []);
+
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    if (token !== "") {
+      if (!socketRef.current) {
+        // Create a new WebSocket connection
+        socketRef.current = new ReconnectingWebSocket(
+          `wss://socket.mystella.ai/ws?authorization=${token}`
+        );
+
+        // Event handler for when the connection is opened
+        socketRef.current.addEventListener("open", (event) => {
+          console.log("WebSocket connection opened:", event);
+
+          // Send a message to the server
+          console.log("SENDING..");
+          socketRef.current.send("Hello, server!");
+        });
+
+        // Event handler for when a message is received from the server
+        socketRef.current.addEventListener("message", (event) => {
+          console.log("Message from server:", event.data);
+          //socket.send(typingValue);
+        });
+
+        // Event handler for when the connection is closed
+        socketRef.current.addEventListener("close", (event) => {
+          console.log("WebSocket connection closed:", event);
+        });
+      }
+
+      // Clean up the WebSocket connection when the component is unmounted
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.close();
+          socketRef.current = null; // Reset the ref when the component unmounts
+        }
+      };
+    }
+  }, [token]); // Empty dependency array ensures this effect runs only once
+
   const scrollChatToBottom = () => {
     if (chatHistoryRef.current) {
       chatHistoryRef.current.scrollTop = chatHistoryRef.current.scrollHeight;
@@ -260,13 +304,33 @@ export default function Call() {
   };
 
   const handleSend = () => {
+    //Code to send to server
+    //console.log("socket", socket);
+    if (socketRef.current) {
+      // Ensure that the socket exists before sending
+      socketRef.current.send(
+        JSON.stringify({
+          service_id: 50, // service identifier
+          message_id: "",
+          question_id: chatHistory[chatHistory.length - 1].question_id, //question_id
+          type: chatHistory[chatHistory.length - 1].type,
+          response: typingValue, // option_display_name
+          time_stamp: "",
+          session_id: "",
+          user_id: "",
+          classify: "User: ",
+          responseFrom: "User",
+        })
+      );
+    }
+
     setChatHistory((prevData) => [
       ...prevData,
       {
         service_id: 50, // service identifier
         message_id: "",
         question_id: chatHistory[chatHistory.length - 1].question_id, //question_id
-        type: "",
+        type: chatHistory[chatHistory.length - 1].type,
         response: typingValue, // option_display_name
         time_stamp: "",
         session_id: "",
@@ -299,52 +363,17 @@ export default function Call() {
     ]);
   };
 
+  const handleOpen = (type, video, audio) => {
+    if (type == "video") {
+      setVideoURL(video);
+    } else {
+      setAudioURL(audio);
+    }
+
+    setOpen(true);
+  };
+  const handleClose = () => setOpen(false);
   //console.log("CHAT", chatHistory)
-  const [token, SetToken] = useState("");
-
-  useEffect(()=>{
-    var requestOptions = {
-      method: 'POST',
-      redirect: 'follow' 
-    };
-    
-    fetch("https://socket.mystella.ai/stella/get-token", requestOptions)
-      .then(response => response.json())
-      .then(result => SetToken(result?.token))
-      .catch(error => console.log('error', error));
-  },[]);
-
-  useEffect(() => {
-    if(token.length > 0){
-    // Create a new WebSocket connection 
-    const socket = new ReconnectingWebSocket(`wss://socket.mystella.ai/ws?authorization=${token}`);
-     
-    // Event handler for when the connection is opened
-    socket.addEventListener('open', (event) => { 
-      console.log('WebSocket connection opened:', event);
-
-      // Send a message to the server
-      socket.send('Hello, server!');
-    });
-
-    // Event handler for when a message is received from the server
-    socket.addEventListener('message', (event) => {
-      console.log('Message from server:', event.data);
-      socket.send(typingValue);
-    });
-
-    // Event handler for when the connection is closed
-    socket.addEventListener('close', (event) => {
-      console.log('WebSocket connection closed:', event);
-    });
-
-    // Clean up the WebSocket connection when the component is unmounted
-    return () => {
-      socket.close();
-    };
-  }
-  }, [token]); // Empty dependency array ensures this effect runs only once
-  
 
   return (
     <div className="w-[100vw] h-[100vh] ">
@@ -414,19 +443,20 @@ export default function Call() {
                             item.question || item?.response
                           }`}
                         </span>
-
-                        {item.type == "form" && item.options.length > 0 && (
-                          <div className="flex flex-wrap gap-2 text-[14px]">
-                            {item.options?.map((opt, i) => (
-                              <button
-                                className="bg-white/20 px-3 py-1 rounded-2xl border border-solid border-white/40 backdrop-blur-md text-white"
-                                onClick={() => handleFormOptionClick(opt)}
-                              >
-                                {opt.option_display_name}
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                        {/* {<p>{TYPES[item.type]}</p>} */}
+                        {TYPES[item.type] == "form" &&
+                          item?.options?.length > 0 && (
+                            <div className="flex flex-wrap gap-2 text-[14px]">
+                              {item?.options?.map((opt, i) => (
+                                <button
+                                  className="bg-white/20 px-3 py-1 rounded-2xl border border-solid border-white/40 backdrop-blur-md text-white"
+                                  onClick={() => handleFormOptionClick(opt)}
+                                >
+                                  {opt.option_display_name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                       </div>
                     </div>
                   );
@@ -586,7 +616,7 @@ export default function Call() {
 
                           borderRadius: "25px",
                         }}
-                        className="flex items-center justify-center text-white"
+                        className="flex items-center justify-center text-white cursor-pointer"
                         onClick={handleSend}
                       >
                         <PaperAirplaneIcon className="w-5 h-5 text-white" />
@@ -594,7 +624,7 @@ export default function Call() {
                     ),
                   }}
                 />
-                <Clipboard />
+                {/* <Clipboard /> */}
               </div>
             </div>
           </div>
